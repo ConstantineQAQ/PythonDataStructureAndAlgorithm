@@ -1,85 +1,68 @@
-class SStack():
-    def __init__(self):
-        self._elems = []
-    def is_empty(self):
-        return self._elems == []
-    def top(self):
-        if self._elems == []:
-            #raise StackUnderflow("in SStack.top()")
-            raise Exception('Stack is empty')
-        return self._elems[-1]
-    def push(self, elem):
-        self._elems.append(elem)
-    def pop(self):
-        if self._elems == []:
-            #raise StackUnderflow("in SStack.pop()")
-            raise Exception('Stack is empty')
-        return self._elems.pop()
-    
+from collections import deque
 
-dirs = [(0,1),(1,0),(0,-1),(-1,0)]
-def mark(maze, pos):
-    maze[pos[0]][pos[1]] = 2
+maze = [
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 0
+    [1, 0, 0, 1, 0, 0, 0, 1, 0, 1],  # 1
+    [1, 0, 0, 1, 0, 0, 0, 1, 0, 1],  # 2
+    [1, 0, 0, 0, 0, 1, 1, 0, 0, 1],  # 3
+    [1, 0, 1, 1, 1, 0, 0, 0, 0, 1],  # 4
+    [1, 0, 0, 0, 1, 0, 0, 0, 0, 1],  # 5
+    [1, 0, 1, 0, 0, 0, 1, 0, 0, 1],  # 6
+    [1, 0, 1, 1, 1, 0, 1, 1, 0, 1],  # 7
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 1],  # 8
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]  # 9
+]
 
-def passable(maze, pos):
-    return maze[pos[0]][pos[1]] == 0
+dirs = [
+    lambda x, y: (x + 1, y),
+    lambda x, y: (x - 1, y),
+    lambda x, y: (x, y - 1),
+    lambda x, y: (x, y + 1)
+]
 
-def find_path(maze, start, end):
-    mark(maze,start)
-    if start == end:
-        print(start,end = ' ')
-        return True
-    for i in [(0,1),(1,0),(0,-1),(-1,0)]:
-        nextp = (start[0]+i[0],start[1]+i[1])
-        if passable(maze,nextp):
-            if find_path(maze,nextp,end):
-                print(start,end = ' ')
-                return True
-    return False
 
-def print_path(end,pos,st):
-    i = 0
-    print(end,i,end = ' ')
-    i += 1
-    while not st.is_empty():
-        print(pos,i,end = ' ')
-        pos,nxt = st.pop()
-        i += 1
-        if pos == end:
-            break
-
-def maze_solver(maze, start, end):
-    if start == end : print(start);return
-    st = SStack()
-    mark(maze,start)
-    st.push((start,0))
-    while not st.is_empty():
-        pos,nxt = st.pop()
-        for i in range(nxt,4):
-            nextp = (pos[0]+dirs[i][0],pos[1]+dirs[i][1])
-            if nextp == end:
-                print_path(end,pos,st)
-                return
-            if passable(maze,nextp):
-                st.push((pos,i+1))
-                mark(maze,nextp)
-                st.push((nextp,0))
+def maze_path(x1, y1, x2, y2):
+    stack = [(x1, y1)]
+    while len(stack) > 0:
+        curr_node = stack[-1]  # 栈顶元素
+        if curr_node[0] == x2 and curr_node[1] == y2:  # 到达终点
+            for p in stack:  # 打印路径
+                print(p)
+            return True
+        for dir in dirs:  # 按照四个方向进行探索
+            next_node = dir(curr_node[0], curr_node[1])
+            if maze[next_node[0]][next_node[1]] == 0:  # 可以走
+                stack.append(next_node)  # 入栈
+                maze[next_node[0]][next_node[1]] = 2  # 标记已经走过
                 break
-    print("No path found")
+        else:
+            maze[curr_node[0]][curr_node[1]] = 2
+            stack.pop()
+    else:
+        print("no path")
+        return False
 
-maze = [[0,1,0,0,0,0,0,0,0,0],
-        [0,0,0,1,1,1,1,1,1,0],
-        [1,1,0,1,0,0,0,0,1,0],
-        [0,1,0,1,0,1,1,0,1,0],
-        [0,1,0,1,0,1,0,0,1,0],
-        [0,1,0,1,0,1,0,1,1,0],
-        [0,1,0,1,0,1,0,1,0,0],
-        [0,1,0,1,0,1,0,1,0,1],
-        [0,1,0,1,0,1,0,1,0,1],
-        [0,0,0,0,0,0,0,0,0,0]]
 
-start = (0,0)
-end = (9,8)
+def maze_path_queue(x1, x2, y1, y2):
+    queue = deque()
+    queue.append((x1, y1, -1))
+    path = []
+    while len(queue) > 0:
+        curr_node = queue.pop()
+        path.append(curr_node)
+        if curr_node[0] == x2 and curr_node[1] == y2:
+            for p in path:
+                print(p)
+            return True
+        for dir in dirs:
+            next_node = dir(curr_node[0], curr_node[1])
+            if maze[next_node[0]][next_node[1]] == 0:
+                queue.append((next_node[0], next_node[1], len(path) - 1))
+                maze[next_node[0]][next_node[1]] = 2
+    else:
+        print("no path")
+        return False
 
-#find_path(maze,start,end)
-maze_solver(maze,start,end)
+
+maze_path(1, 1, 8, 8)
+maze_path_queue(1, 1, 8, 8)
